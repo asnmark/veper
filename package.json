@@ -1,0 +1,57 @@
+{
+  "name": "veper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Source-grounded newsroom intelligence for Slovenian radio editors",
+  "scripts": {
+    "dev": "concurrently --kill-others --names api,web \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "node --env-file-if-exists=.env ./node_modules/tsx/dist/cli.mjs watch src/server/main.ts",
+    "dev:web": "vite --host 127.0.0.1",
+    "build": "npm run typecheck && node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.server.json && vite build",
+    "start": "node --env-file-if-exists=.env dist/server/main.js",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "smoke:production": "node tests/production-smoke.mjs",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm test && npm run build && npm run smoke:production && npm run test:e2e"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asnmark/veper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/asnmark/veper/issues"
+  },
+  "homepage": "https://github.com/asnmark/veper#readme",
+  "dependencies": {
+    "@fastify/static": "10.1.6",
+    "@fontsource-variable/ibm-plex-sans": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@google/genai": "2.30.0",
+    "better-sqlite3": "13.0.3",
+    "fast-xml-parser": "5.11.2",
+    "fastify": "5.12.7",
+    "lucide-react": "1.60.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "concurrently": "10.0.6",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.5"
+  }
+}
