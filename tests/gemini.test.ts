@@ -46,7 +46,7 @@ describe("GeminiAnalyzer", () => {
     expect(result).toHaveLength(1);
     expect(result[0]?.analysis.briefing[0]?.evidence[0]?.quote).toBe(quote);
     expect(requests).toHaveLength(2);
-    expect(requests[0]?.["model"]).toBe("gemini-flash-latest");
+    expect(requests[0]?.["model"]).toBe("gemini-3.8-flash");
     expect(config["responseMimeType"]).toBe("application/json");
     expect(config["responseJsonSchema"]).toBeDefined();
     expect(String(requests[0]?.["contents"])).not.toContain("https://publisher.example/article");

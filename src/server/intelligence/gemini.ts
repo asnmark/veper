@@ -4,7 +4,7 @@ import type { StoryAnalysis } from "../../shared/types.js";
 import { applySupportReview, validateAnalysis } from "./evidence.js";
 import type { AnalyzedStory, StoryAnalyzer } from "./types.js";
 
-export const GEMINI_MODEL = "gemini-flash-latest";
+export const GEMINI_MODEL = "gemini-3.8-flash";
 const MAX_STORIES_PER_REQUEST = 4;
 const MAX_ARTICLES_PER_STORY = 6;
 const MAX_EXCERPT_CHARS = 500;
