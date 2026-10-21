@@ -1,6 +1,6 @@
 import { AlertTriangle, ArrowUpRight, Bookmark, Layers3, Radio } from "lucide-react";
 import type { StoryRecord } from "../../shared/types.js";
-import { categoryLabels, formatObservedTime, newsroomSignals, relativeTime, sourceCount } from "../format.js";
+import { categoryLabels, formatObservedTime, newsroomSignals, relativeTime, sourceCount, sourceCountLabel } from "../format.js";
 
 interface Props {
   stories: StoryRecord[];
@@ -11,7 +11,7 @@ interface Props {
 
 function SourceMarks({ story }: { story: StoryRecord }) {
   const sources = [...new Map(story.articles.map((article) => [article.sourceId, article.sourceName])).entries()];
-  return <span className="source-marks" aria-label={`${sources.length} ${sources.length === 1 ? "vir" : "virov"}`}>
+  return <span className="source-marks" aria-label={sourceCountLabel(sources.length)}>
     {sources.slice(0, 3).map(([id, name]) => <span key={id} className="source-mark" title={name}>{name.slice(0, 3).toLocaleUpperCase("sl-SI")}</span>)}
     {sources.length > 3 && <span className="source-mark source-mark-more">+{sources.length - 3}</span>}
   </span>;
@@ -43,7 +43,7 @@ export function StoryList({ stories, selectedId, now, onSelect }: Props) {
         >
           <span className="story-overline">
             <span className={`story-label ${contradiction ? "label-conflict" : sourceTotal > 1 ? "label-sources" : "label-single"}`}>
-              {contradiction ? <><AlertTriangle size={11} aria-hidden="true" /> MOŽNO NESKLADJE</> : sourceTotal > 1 ? <><Layers3 size={11} aria-hidden="true" /> {sourceTotal} VIRA</> : "EN VIR"}
+              {contradiction ? <><AlertTriangle size={11} aria-hidden="true" /> MOŽNO NESKLADJE</> : sourceTotal > 1 ? <><Layers3 size={11} aria-hidden="true" /> {sourceCountLabel(sourceTotal).toLocaleUpperCase("sl-SI")}</> : "EN VIR"}
             </span>
             <span className="story-updated" title={latest ? formatObservedTime(latest) : undefined}>{relativeTime(story.updatedAt, now)}</span>
           </span>

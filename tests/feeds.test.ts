@@ -7,7 +7,7 @@ const source: FeedSource = {
   name: "RTV SLO",
   region: "si",
   language: "sl",
-  feedUrl: "https://www.rtvslo.si/rss/novice.xml",
+  feedUrl: "https://img.rtvslo.si/feeds/novice.xml",
   homepage: "https://www.rtvslo.si",
 };
 const observedAt = "2026-10-20T07:15:00.000Z";

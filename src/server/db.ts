@@ -349,7 +349,15 @@ export class NewsStore {
 
     return rows.map((row) => {
       const age = row.last_success_at ? Date.parse(now) - Date.parse(row.last_success_at) : Infinity;
-      const state = !row.last_checked_at ? "waiting" : !row.last_success_at ? "offline" : age > 15 * 60_000 ? "stale" : "online";
+      const state = !row.last_checked_at
+        ? "waiting"
+        : !row.last_success_at
+          ? "offline"
+          : age > 15 * 60_000
+            ? "stale"
+            : row.last_error
+              ? "degraded"
+              : "online";
       return {
         id: row.id, name: row.name, region: row.region, homepage: row.homepage,
         state, lastCheckedAt: row.last_checked_at, lastSuccessAt: row.last_success_at,

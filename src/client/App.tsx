@@ -4,7 +4,7 @@ import { SourceRail, type DeskFilter } from "./components/SourceRail.js";
 import { StoryDossier } from "./components/StoryDossier.js";
 import { StoryList } from "./components/StoryList.js";
 import { useDesk } from "./hooks/useDesk.js";
-import { categoryLabels, formatClock, formatDate, formatDateTime, isDevelopingStory, latestStoryActivity, significantText } from "./format.js";
+import { categoryLabels, compareDevelopingStories, formatClock, formatDate, formatDateTime, isDevelopingStory, significantText } from "./format.js";
 import type { StoryCategory } from "../shared/types.js";
 
 const categories = Object.keys(categoryLabels) as StoryCategory[];
@@ -72,9 +72,9 @@ export function App() {
       return searchable.includes(query);
     });
     return filter === "developing"
-      ? matchingStories.sort((left, right) => latestStoryActivity(right) - latestStoryActivity(left))
+      ? matchingStories.sort((left, right) => compareDevelopingStories(left, right, desk?.generatedAt ?? localClock))
       : matchingStories;
-  }, [category, desk, filter, search]);
+  }, [category, desk, filter, localClock, search]);
 
   useEffect(() => {
     if (!filteredStories.some((story) => story.id === selectedId)) {

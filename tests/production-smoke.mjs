@@ -55,7 +55,7 @@ try {
   const desk = await deskResponse.json();
   assert.equal(desk.ai.state, "disabled");
   assert.equal(desk.stories.length, 0);
-  assert.equal(desk.sources.length, 5);
+  assert.equal(desk.sources.length, 6);
   assert.ok(desk.sources.every((source) => source.state === "waiting"));
 
   const page = await fetch(baseUrl);

@@ -1,6 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, Bookmark, Clock3, ExternalLink, FileClock, Radio, ShieldAlert } from "lucide-react";
 import type { EvidenceCitation, StoryRecord, StoredArticle } from "../../shared/types.js";
-import { categoryLabels, formatDateTime, formatObservedTime, sourceCount } from "../format.js";
+import { categoryLabels, formatDateTime, formatObservedTime, publicSourceCountLabel, sourceCount } from "../format.js";
 
 interface Props {
   story: StoryRecord | null;
@@ -97,7 +97,7 @@ export function StoryDossier({ story, onSave }: Props) {
       <h2>{story.title}</h2>
       <div className="dossier-meta">
         {story.category && <span className="category-pill">{categoryLabels[story.category]}</span>}
-        <span>{uniqueSources} {uniqueSources === 1 ? "javni vir" : "javna vira"}</span>
+        <span>{publicSourceCountLabel(uniqueSources)}</span>
         <span>{story.articles.length} {story.articles.length === 1 ? "objava" : "objavi"}</span>
       </div>
       <button type="button" className={`save-story ${story.saved ? "is-saved" : ""}`}
@@ -125,7 +125,7 @@ export function StoryDossier({ story, onSave }: Props) {
     <section className="comparison-section" aria-label="Primerjava virov">
       <div className="section-heading">
         <div><span className="section-index">02</span><h3>Primerjava poročanja</h3></div>
-        {hasCrossSource && <span className="comparison-source-count">{uniqueSources} JAVNA VIRA</span>}
+        {hasCrossSource && <span className="comparison-source-count">{publicSourceCountLabel(uniqueSources).toLocaleUpperCase("sl-SI")}</span>}
       </div>
       {comparisons.length > 0 ? <div className="comparison-stack">
         {comparisons.map((comparison, index) => <article className={`comparison ${comparison.kind}`} key={`${index}-${comparison.left.quoteHash}`}>

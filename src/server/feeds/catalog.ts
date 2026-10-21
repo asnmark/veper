@@ -6,7 +6,7 @@ export const PUBLIC_SOURCES: FeedSource[] = [
     name: "RTV Slovenija",
     region: "si",
     language: "sl",
-    feedUrl: "https://www.rtvslo.si/rss/novice.xml",
+    feedUrl: "https://img.rtvslo.si/feeds/novice.xml",
     homepage: "https://www.rtvslo.si",
   },
   {
@@ -22,8 +22,16 @@ export const PUBLIC_SOURCES: FeedSource[] = [
     name: "Siol.net",
     region: "si",
     language: "sl",
-    feedUrl: "https://siol.net/rss",
+    feedUrl: "https://siol.net/feeds/section/novice",
     homepage: "https://siol.net",
+  },
+  {
+    id: "delo",
+    name: "Delo",
+    region: "si",
+    language: "sl",
+    feedUrl: "https://www.delo.si/rss",
+    homepage: "https://www.delo.si",
   },
   {
     id: "bbc-world",

@@ -96,7 +96,7 @@ export interface StoryRecord {
   articles: StoredArticle[];
 }
 
-export type SourceState = "waiting" | "online" | "stale" | "offline";
+export type SourceState = "waiting" | "online" | "degraded" | "stale" | "offline";
 
 export interface SourceHealth {
   id: string;

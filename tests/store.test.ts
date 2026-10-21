@@ -5,7 +5,7 @@ import type { FeedItem, FeedSource } from "../src/shared/types.js";
 
 const rtvslo: FeedSource = {
   id: "rtvslo", name: "RTV SLO", region: "si", language: "sl",
-  feedUrl: "https://www.rtvslo.si/rss/novice.xml", homepage: "https://www.rtvslo.si",
+  feedUrl: "https://img.rtvslo.si/feeds/novice.xml", homepage: "https://www.rtvslo.si",
 };
 const n1: FeedSource = {
   id: "n1", name: "N1 Slovenija", region: "si", language: "sl",

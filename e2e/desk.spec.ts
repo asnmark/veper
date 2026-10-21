@@ -52,7 +52,8 @@ const bridge: StoryRecord = {
 };
 const policyArticle: StoredArticle = {
   ...article("c", "rtvslo", "RTV Slovenija", "Državni zbor potrdil predlog proračuna", "Poslanci so glasovali o državnem proračunu.", "https://rtvslo.invalid/proracun"),
-  id: "c", storyId: "story-budget", observedAt: "2026-10-20T06:20:00.000Z", lastSeenAt: "2026-10-20T06:20:00.000Z",
+  id: "c", storyId: "story-budget", publishedAt: "2026-10-20T06:20:00.000Z",
+  observedAt: "2026-10-20T06:20:00.000Z", lastSeenAt: "2026-10-20T06:20:00.000Z",
 };
 const policy: StoryRecord = {
   id: "story-budget", title: policyArticle.title, category: "politics",
@@ -76,7 +77,7 @@ const desk: DeskStatus = {
 async function installApiRoutes(page: Page): Promise<void> {
   await page.route("**/api/events", (route) => route.abort());
   await page.route("**/api/desk", (route) => route.fulfill({ json: desk }));
-  await page.route("**/api/refresh", (route) => route.fulfill({ json: { inserted: 0, updated: 0, sourceCount: 5, failedSourceCount: 0 } }));
+  await page.route("**/api/refresh", (route) => route.fulfill({ json: { inserted: 0, updated: 0, sourceCount: 6, failedSourceCount: 0 } }));
   await page.route("**/api/stories/*/saved", (route) => route.fulfill({ json: { saved: true } }));
   await page.goto("/");
 }
@@ -127,7 +128,7 @@ test("surfaces concrete newsroom signals and filters stories in development", as
 
   await expect(page.getByText("NOVO POROČANJE").first()).toBeVisible();
   await expect(page.getByText("VEČ VIROV").first()).toBeVisible();
-  await expect(page.getByText("POSODOBLJENA OBJAVA").first()).toBeVisible();
+  await expect(page.getByText("SPREMEMBA ZAJETA").first()).toBeVisible();
   await expect(page.getByText("MOŽNO NESKLADJE").first()).toBeVisible();
   await page.getByRole("button", { name: "Filter: v razvoju" }).click();
   await expect(page.getByRole("button", { name: /Občina Vrhnika do nedelje/ })).toBeVisible();
