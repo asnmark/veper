@@ -42,6 +42,9 @@ describe("GeminiAnalyzer", () => {
 
     const result = await analyzer.analyzeStories([pending]);
     const config = requests[0]?.["config"] as Record<string, unknown>;
+    const schema = config["responseJsonSchema"] as {
+      properties: { stories: { items: { properties: { development: { type: string[] } } } } };
+    };
 
     expect(result).toHaveLength(1);
     expect(result[0]?.analysis.briefing[0]?.evidence[0]?.quote).toBe(quote);
@@ -49,6 +52,7 @@ describe("GeminiAnalyzer", () => {
     expect(requests[0]?.["model"]).toBe("gemini-3.8-flash");
     expect(config["responseMimeType"]).toBe("application/json");
     expect(config["responseJsonSchema"]).toBeDefined();
+    expect(schema.properties.stories.items.properties.development.type).toEqual(["object", "null"]);
     expect(String(requests[0]?.["contents"])).not.toContain("https://publisher.example/article");
     expect(String(requests[1]?.["contents"])).toContain("CLAIMS_TO_REVIEW_JSON");
     expect(String(requests[1]?.["contents"])).not.toContain("https://publisher.example/article");

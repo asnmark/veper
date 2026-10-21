@@ -29,6 +29,11 @@ const briefingSchema = {
   additionalProperties: false,
 };
 
+const nullableBriefingSchema = {
+  ...briefingSchema,
+  type: ["object", "null"],
+};
+
 export const STORY_OUTPUT_SCHEMA = {
   type: "object",
   properties: {
@@ -43,7 +48,7 @@ export const STORY_OUTPUT_SCHEMA = {
             enum: ["politics", "public-safety", "economy", "society", "world", "environment", "culture", "sport", "technology", "other"],
           },
           briefing: { type: "array", items: briefingSchema, maxItems: 4 },
-          development: { anyOf: [briefingSchema, { type: "null" }] },
+          development: nullableBriefingSchema,
           comparisons: {
             type: "array",
             items: {
