@@ -19,10 +19,14 @@ export function App() {
   const [localClock, setLocalClock] = useState(() => new Date().toISOString());
   const searchRef = useRef<HTMLInputElement>(null);
   const mobileMenuRef = useRef<HTMLButtonElement>(null);
+  const railOpenRef = useRef(railOpen);
+  railOpenRef.current = railOpen;
 
   const closeRail = useCallback(() => {
+    const wasOpen = railOpenRef.current;
+    railOpenRef.current = false;
     setRailOpen(false);
-    if (window.matchMedia("(max-width: 760px)").matches) {
+    if (wasOpen && window.matchMedia("(max-width: 760px)").matches) {
       window.requestAnimationFrame(() => mobileMenuRef.current?.focus());
     }
   }, []);
