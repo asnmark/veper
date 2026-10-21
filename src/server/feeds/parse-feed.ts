@@ -180,7 +180,8 @@ export function parseFeed(xml: string, source: FeedSource, observedAt: string): 
       title: title.slice(0, 360),
       summary,
       url,
-      publishedAt: dateOf(entry.pubDate, entry.published, entry.date, entry.updated),
+      publishedAt: dateOf(entry.pubDate, entry.published, entry.date),
+      sourceUpdatedAt: dateOf(entry.updated),
       observedAt,
     }];
   });

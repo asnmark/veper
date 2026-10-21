@@ -9,7 +9,7 @@ const pending: PendingStory = {
     id: "article_1", storyId: "story_1", sourceId: "rtvslo", sourceName: "RTV Slovenija",
     region: "si", language: "sl", externalId: "rtv-1", title: "Zapora ceste v Vrhniki",
     summary: quote, url: "https://publisher.example/article", canonicalUrl: "https://publisher.example/article",
-    publishedAt: "2026-10-20T07:00:00.000Z", observedAt: "2026-10-20T07:10:00.000Z",
+    publishedAt: "2026-10-20T07:00:00.000Z", sourceUpdatedAt: null, observedAt: "2026-10-20T07:10:00.000Z",
     lastSeenAt: "2026-10-20T07:10:00.000Z", contentHash: "hash-1", revisions: [],
   }],
 };
@@ -75,6 +75,28 @@ describe("GeminiAnalyzer", () => {
     const result = await analyzer.analyzeStories([pending]);
 
     expect(result[0]?.analysis.briefing).toEqual([]);
+  });
+
+  it("completes omitted stories with an empty analysis so the queue can move on", async () => {
+    const second: PendingStory = {
+      ...pending,
+      id: "story_2",
+      title: "Premalo dokazov za drugi naslov",
+      articles: pending.articles.map((article) => ({ ...article, id: "article_2", storyId: "story_2" })),
+    };
+    const client = {
+      models: {
+        generateContent: async () => ({ text: JSON.stringify({ stories: [{
+          storyId: "story_1", category: "public-safety", briefing: [], development: null, comparisons: [], leads: [],
+        }] }) }),
+      },
+    };
+    const analyzer = new GeminiAnalyzer("test-key", client as never);
+
+    const result = await analyzer.analyzeStories([pending, second]);
+
+    expect(result.map((item) => item.storyId)).toEqual(["story_1", "story_2"]);
+    expect(result[1]?.analysis).toMatchObject({ category: "other", briefing: [], development: null, comparisons: [], leads: [] });
   });
 
   it("does not call Google for an empty batch", async () => {

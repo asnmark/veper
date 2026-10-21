@@ -1,12 +1,18 @@
 import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
 
-const systemChromium = process.env["CHROMIUM_PATH"] ?? (existsSync("/usr/bin/chromium") ? "/usr/bin/chromium" : undefined);
+const systemChromium = process.env["CHROMIUM_PATH"] ?? [
+  "/usr/bin/chromium",
+  "C:/Program Files/Google/Chrome/Application/chrome.exe",
+  "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+  "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
+].find(existsSync);
 
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   reporter: "list",
+  workers: 1,
   use: {
     ...devices["Desktop Chrome"],
     baseURL: "http://127.0.0.1:5173",

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Activity, AlertTriangle, ArrowRight, ChevronDown, CircleHelp, Clock3, Globe2, Menu, RadioTower, RefreshCw, Search, Signal, Zap } from "lucide-react";
 import { SourceRail, type DeskFilter } from "./components/SourceRail.js";
 import { StoryDossier } from "./components/StoryDossier.js";
 import { StoryList } from "./components/StoryList.js";
 import { useDesk } from "./hooks/useDesk.js";
-import { categoryLabels, formatClock, formatDate, formatDateTime, significantText } from "./format.js";
+import { categoryLabels, formatClock, formatDate, formatDateTime, isDevelopingStory, latestStoryActivity, significantText } from "./format.js";
 import type { StoryCategory } from "../shared/types.js";
 
 const categories = Object.keys(categoryLabels) as StoryCategory[];
@@ -18,6 +18,14 @@ export function App() {
   const [railOpen, setRailOpen] = useState(false);
   const [localClock, setLocalClock] = useState(() => new Date().toISOString());
   const searchRef = useRef<HTMLInputElement>(null);
+  const mobileMenuRef = useRef<HTMLButtonElement>(null);
+
+  const closeRail = useCallback(() => {
+    setRailOpen(false);
+    if (window.matchMedia("(max-width: 760px)").matches) {
+      window.requestAnimationFrame(() => mobileMenuRef.current?.focus());
+    }
+  }, []);
 
   useEffect(() => {
     const timer = window.setInterval(() => setLocalClock(new Date().toISOString()), 30_000);
@@ -29,7 +37,7 @@ export function App() {
         event.preventDefault();
         searchRef.current?.focus();
       } else if (event.key === "Escape") {
-        setRailOpen(false);
+        closeRail();
         searchRef.current?.blur();
       }
     };
@@ -38,12 +46,13 @@ export function App() {
       window.clearInterval(timer);
       window.removeEventListener("keydown", shortcut);
     };
-  }, []);
+  }, [closeRail]);
 
   const filteredStories = useMemo(() => {
     if (!desk) return [];
     const query = significantText(search.trim());
-    return desk.stories.filter((story) => {
+    const matchingStories = desk.stories.filter((story) => {
+      if (filter === "developing" && !isDevelopingStory(story, desk.generatedAt)) return false;
       if (filter === "discrepancies" && !story.analysis?.comparisons.some((entry) => entry.kind !== "agreement")) return false;
       if (filter === "multi-source" && new Set(story.articles.map((article) => article.sourceId)).size < 2) return false;
       if (filter === "saved" && !story.saved) return false;
@@ -58,6 +67,9 @@ export function App() {
       ].join(" "));
       return searchable.includes(query);
     });
+    return filter === "developing"
+      ? matchingStories.sort((left, right) => latestStoryActivity(right) - latestStoryActivity(left))
+      : matchingStories;
   }, [category, desk, filter, search]);
 
   useEffect(() => {
@@ -83,6 +95,7 @@ export function App() {
     : `GEMINI · ${{
       disabled: "IZKLOPLJEN",
       idle: "ČAKA NA NOVE OBJAVE",
+      queued: "ČAKA V VRSTI",
       processing: "PRIMERJAVA POTEKA",
       ready: "AI PREGLED ZAKLJUČEN",
       error: "NI DOSEGLJIV",
@@ -96,8 +109,8 @@ export function App() {
         <span className="brand-divider" aria-hidden="true" />
         <span className="brand-descriptor">INTELIGENCA ZA REDAKCIJO</span>
       </div>
-      <button type="button" className="mobile-menu" aria-label={railOpen ? "Zapri filtre" : "Odpri filtre"}
-        aria-expanded={railOpen} onClick={() => setRailOpen((open) => !open)}>
+      <button ref={mobileMenuRef} type="button" className="mobile-menu" aria-label={railOpen ? "Zapri filtre" : "Odpri filtre"}
+        aria-controls="source-rail" aria-expanded={railOpen} onClick={() => railOpen ? closeRail() : setRailOpen(true)}>
         <Menu size={19} aria-hidden="true" />
       </button>
       <div className="topbar-meta">
@@ -115,7 +128,7 @@ export function App() {
 
     <div className="app-body">
       <SourceRail filter={filter} onFilter={setFilter} sources={desk?.sources ?? []}
-        stories={desk?.stories ?? []} now={desk?.generatedAt ?? localClock} open={railOpen} onClose={() => setRailOpen(false)} />
+        stories={desk?.stories ?? []} now={desk?.generatedAt ?? localClock} open={railOpen} onClose={closeRail} />
 
       <main className="work-area">
         <section className="signal-column" aria-labelledby="desk-heading">
@@ -136,6 +149,9 @@ export function App() {
           </div>
 
           {desk?.ai.state === "disabled" && <div className="service-banner" role="status">
+            <CircleHelp size={15} aria-hidden="true" /><span>{desk.ai.message}</span>
+          </div>}
+          {desk?.ai.state === "queued" && <div className="service-banner" role="status">
             <CircleHelp size={15} aria-hidden="true" /><span>{desk.ai.message}</span>
           </div>}
           {desk?.ai.state === "error" && <div className="service-banner is-warning" role="status">

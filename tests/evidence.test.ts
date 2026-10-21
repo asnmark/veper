@@ -8,7 +8,7 @@ function item(id: string, sourceId: string, publisher: string, summary: string):
     id, sourceId, sourceName: publisher, region: "si", language: "sl", externalId: id,
     storyId: "story-1", title: "Most v Vrhniki bo zaprt", summary,
     url: `https://${sourceId}.example/most`, canonicalUrl: `https://${sourceId}.example/most`,
-    publishedAt: "2026-10-20T07:00:00.000Z", observedAt: "2026-10-20T07:10:00.000Z",
+    publishedAt: "2026-10-20T07:00:00.000Z", sourceUpdatedAt: null, observedAt: "2026-10-20T07:10:00.000Z",
     lastSeenAt: "2026-10-20T07:10:00.000Z", contentHash: `hash-${id}`, revisions: [],
   };
 }

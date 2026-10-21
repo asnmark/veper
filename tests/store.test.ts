@@ -18,7 +18,7 @@ function article(source: FeedSource, overrides: Partial<FeedItem> = {}): FeedIte
     region: source.region, language: source.language,
     title: "Občina Vrhnika do petka zapira stari most",
     summary: "Občina je potrdila, da bo most zaprt do petka.",
-    url: `${source.homepage}/novice/most`, publishedAt: "2026-10-20T07:00:00.000Z",
+    url: `${source.homepage}/novice/most`, publishedAt: "2026-10-20T07:00:00.000Z", sourceUpdatedAt: null,
     observedAt: "2026-10-20T07:15:00.000Z", ...overrides,
   };
 }
@@ -63,6 +63,21 @@ describe("NewsStore", () => {
     expect(store.getDesk()[0]?.articles[0]?.summary).toContain("nedelje");
     expect(store.getDesk()[0]?.articles[0]?.revisions).toHaveLength(1);
     expect(store.getDesk()[0]?.articles[0]?.revisions[0]?.summary).toContain("petka");
+  });
+
+  it("keeps publisher update time separate from publication time", () => {
+    store = new NewsStore(":memory:");
+    store.saveSources([rtvslo]);
+    store.upsertItems(rtvslo, [article(rtvslo, {
+      sourceUpdatedAt: "2026-10-20T07:30:00.000Z",
+    })]);
+
+    const stored = store.getDesk()[0]?.articles[0];
+
+    expect(stored).toMatchObject({
+      publishedAt: "2026-10-20T07:00:00.000Z",
+      sourceUpdatedAt: "2026-10-20T07:30:00.000Z",
+    });
   });
 
   it("keeps unrelated reports separate even when they share a common phrase", () => {

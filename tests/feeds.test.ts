@@ -60,6 +60,23 @@ describe("parseFeed", () => {
     });
   });
 
+  it("keeps Atom publication and update timestamps separate", () => {
+    const [item] = parseFeed(
+      `<feed xmlns="http://www.w3.org/2005/Atom"><entry>
+        <id>tag:n1info.si,2026:updated</id><title>Posodobljena zgodba</title>
+        <link rel="alternate" href="https://n1info.si/novice/slovenija/updated"/>
+        <published>2026-10-20T06:00:00Z</published><updated>2026-10-20T07:30:00Z</updated>
+      </entry></feed>`,
+      source,
+      observedAt,
+    );
+
+    expect(item).toMatchObject({
+      publishedAt: "2026-10-20T06:00:00.000Z",
+      sourceUpdatedAt: "2026-10-20T07:30:00.000Z",
+    });
+  });
+
   it("drops entries without a usable title or safe source URL and caps excerpts", () => {
     const longText = "novica ".repeat(200);
     const items = parseFeed(

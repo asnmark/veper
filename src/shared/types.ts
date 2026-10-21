@@ -19,6 +19,7 @@ export interface FeedItem {
   summary: string;
   url: string;
   publishedAt: string | null;
+  sourceUpdatedAt: string | null;
   observedAt: string;
 }
 
@@ -110,7 +111,7 @@ export interface SourceHealth {
   articlesIn24h: number;
 }
 
-export type AIState = "disabled" | "idle" | "processing" | "ready" | "error";
+export type AIState = "disabled" | "idle" | "queued" | "processing" | "ready" | "error";
 
 export interface DeskStatus {
   generatedAt: string;

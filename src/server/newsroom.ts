@@ -6,7 +6,7 @@ import { FeedParseError, parseFeed } from "./feeds/parse-feed.js";
 import type { StoryAnalyzer } from "./intelligence/types.js";
 
 const DEFAULT_POLL_INTERVAL_MS = 90_000;
-const MAX_STORIES_PER_ANALYSIS = 8;
+const MAX_STORIES_PER_ANALYSIS = 4;
 
 function sourceError(error: unknown): string {
   if (error instanceof FeedFetchError) return error.message;
@@ -171,10 +171,15 @@ export class NewsroomService {
       }
       this.analysisFailureCount = 0;
       this.retryAnalysisAt = 0;
-      this.aiState = saved > 0 ? "ready" : "idle";
-      this.aiMessage = saved > 0
-        ? "Ujemanje navedkov in ločen AI pregled podpore sta zaključena; preverite izvirnik."
-        : "Za nove objave ni dovolj citatov, ki bi prestali pregled podpore.";
+      const remaining = this.store.getPendingStories(1_000, generatedAt).length;
+      this.aiState = remaining > 0 ? "queued" : saved > 0 ? "ready" : "idle";
+      this.aiMessage = remaining > 0
+        ? saved > 0
+          ? `Delna analiza: ${saved} obdelanih; ${remaining} še čaka na pregled.`
+          : `${remaining} zgodb še čaka na pregled; analiza zanje ni vrnila rezultatov.`
+        : saved > 0
+          ? "Ujemanje navedkov in ločen AI pregled podpore sta zaključena; preverite izvirnik."
+          : "Za nove objave ni dovolj citatov, ki bi prestali pregled podpore.";
       if (saved) this.events.emit("desk-updated");
     } catch {
       this.analysisFailureCount += 1;

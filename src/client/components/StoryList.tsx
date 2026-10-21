@@ -1,6 +1,6 @@
 import { AlertTriangle, ArrowUpRight, Bookmark, Layers3, Radio } from "lucide-react";
 import type { StoryRecord } from "../../shared/types.js";
-import { categoryLabels, formatObservedTime, relativeTime, sourceCount } from "../format.js";
+import { categoryLabels, formatObservedTime, newsroomSignals, relativeTime, sourceCount } from "../format.js";
 
 interface Props {
   stories: StoryRecord[];
@@ -48,6 +48,9 @@ export function StoryList({ stories, selectedId, now, onSelect }: Props) {
             <span className="story-updated" title={latest ? formatObservedTime(latest) : undefined}>{relativeTime(story.updatedAt, now)}</span>
           </span>
           <h3>{story.title}</h3>
+          <span className="story-signals" aria-label="Uredniški signali">
+            {newsroomSignals(story, now).map((signal) => <span className={`story-signal signal-${signal.id}`} key={signal.id}>{signal.label}</span>)}
+          </span>
           <p className="story-excerpt">{excerpt}</p>
           {lead && <span className="story-citations" aria-label="Dokazi v virih">
             {lead.evidence.slice(0, 2).map((citation) => <span key={`${citation.articleId}-${citation.quoteHash}`}>{citation.publisher}<ArrowUpRight size={10} aria-hidden="true" /></span>)}

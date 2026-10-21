@@ -53,22 +53,28 @@ interface TimelineEntry {
 }
 
 function timelineOf(story: StoryRecord): TimelineEntry[] {
-  return story.articles.flatMap((article) => [
-    ...article.revisions.map((revision) => ({
-      id: revision.id, observedAt: revision.observedAt, timeLabel: "prej zajeto · " + formatDateTime(revision.observedAt), title: revision.title, summary: revision.summary,
-      sourceName: article.sourceName, url: article.url, revision: true,
-    })),
-    {
-      id: article.id,
-      observedAt: article.revisions.length ? article.observedAt : article.publishedAt ?? article.observedAt,
-      timeLabel: article.revisions.length
-        ? "posodobitev zajeta · " + formatDateTime(article.observedAt)
-        : article.publishedAt
-          ? "objavljeno · " + formatDateTime(article.publishedAt)
-          : "zajeto · " + formatDateTime(article.observedAt),
-      title: article.title, summary: article.summary, sourceName: article.sourceName, url: article.url, revision: false,
-    },
-  ]).sort((left, right) => Date.parse(left.observedAt) - Date.parse(right.observedAt));
+  return story.articles.flatMap((article) => {
+    const hasPublisherUpdate = !!article.sourceUpdatedAt &&
+      (!article.publishedAt || Date.parse(article.sourceUpdatedAt) > Date.parse(article.publishedAt));
+    return [
+      ...article.revisions.map((revision) => ({
+        id: revision.id, observedAt: revision.observedAt, timeLabel: "prej zajeto · " + formatDateTime(revision.observedAt), title: revision.title, summary: revision.summary,
+        sourceName: article.sourceName, url: article.url, revision: true,
+      })),
+      {
+        id: article.id,
+        observedAt: hasPublisherUpdate ? article.sourceUpdatedAt! : article.revisions.length ? article.observedAt : article.publishedAt ?? article.observedAt,
+        timeLabel: hasPublisherUpdate
+          ? "vir posodobil · " + formatDateTime(article.sourceUpdatedAt)
+          : article.revisions.length
+            ? "posodobitev zajeta · " + formatDateTime(article.observedAt)
+            : article.publishedAt
+              ? "objavljeno · " + formatDateTime(article.publishedAt)
+              : "zajeto · " + formatDateTime(article.observedAt),
+        title: article.title, summary: article.summary, sourceName: article.sourceName, url: article.url, revision: false,
+      },
+    ];
+  }).sort((left, right) => Date.parse(left.observedAt) - Date.parse(right.observedAt));
 }
 
 export function StoryDossier({ story, onSave }: Props) {
@@ -165,7 +171,7 @@ export function StoryDossier({ story, onSave }: Props) {
         {timeline.map((entry) => <li key={entry.id} className={entry.revision ? "timeline-revision" : ""}>
           <span className="timeline-point" aria-hidden="true" />
           <div className="timeline-entry">
-            <div className="timeline-meta"><strong>{entry.sourceName}</strong><time>{entry.timeLabel}</time></div>
+            <div className="timeline-meta"><strong>{entry.sourceName}</strong><time dateTime={entry.observedAt}>{entry.timeLabel}</time></div>
             {entry.revision && <span className="revision-label">PREJŠNJI IZSEK</span>}
             <h4>{entry.title}</h4>
             {entry.summary && <p>{entry.summary}</p>}

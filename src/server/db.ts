@@ -155,6 +155,7 @@ export class NewsStore {
         url TEXT NOT NULL,
         canonical_url TEXT NOT NULL,
         published_at TEXT,
+        source_updated_at TEXT,
         observed_at TEXT NOT NULL,
         last_seen_at TEXT NOT NULL,
         content_hash TEXT NOT NULL,
@@ -173,6 +174,10 @@ export class NewsStore {
         UNIQUE(article_id, content_hash)
       );
     `);
+    const articleColumns = this.database.pragma("table_info(articles)") as Array<{ name: string }>;
+    if (!articleColumns.some((column) => column.name === "source_updated_at")) {
+      this.database.exec("ALTER TABLE articles ADD COLUMN source_updated_at TEXT");
+    }
   }
 
   close(): void {
@@ -208,9 +213,9 @@ export class NewsStore {
     const insertArticle = this.database.prepare(`
       INSERT INTO articles
         (id, source_id, external_id, story_id, title, summary, url, canonical_url,
-         published_at, observed_at, last_seen_at, content_hash)
+         published_at, source_updated_at, observed_at, last_seen_at, content_hash)
       VALUES (@id, @sourceId, @externalId, @storyId, @title, @summary, @url, @canonicalUrl,
-              @publishedAt, @observedAt, @observedAt, @contentHash)
+              @publishedAt, @sourceUpdatedAt, @observedAt, @observedAt, @contentHash)
     `);
     const findArticleById = this.database.prepare(`
       SELECT title, summary, observed_at, content_hash FROM articles WHERE id=?
@@ -221,11 +226,15 @@ export class NewsStore {
     `);
     const updateArticle = this.database.prepare(`
       UPDATE articles SET external_id=@externalId, title=@title, summary=@summary, url=@url,
-        canonical_url=@canonicalUrl, published_at=@publishedAt, observed_at=@observedAt,
+        canonical_url=@canonicalUrl, published_at=@publishedAt,
+        source_updated_at=COALESCE(@sourceUpdatedAt, source_updated_at), observed_at=@observedAt,
         last_seen_at=MAX(last_seen_at, @observedAt), content_hash=@contentHash
       WHERE id=@id
     `);
-    const touchArticle = this.database.prepare("UPDATE articles SET last_seen_at=MAX(last_seen_at, ?) WHERE id=?");
+    const touchArticle = this.database.prepare(`
+      UPDATE articles SET last_seen_at=MAX(last_seen_at, ?), source_updated_at=COALESCE(?, source_updated_at)
+      WHERE id=?
+    `);
     const updateStory = this.database.prepare(`
       UPDATE stories SET updated_at=MAX(updated_at, ?)
       WHERE id=?
@@ -273,7 +282,7 @@ export class NewsStore {
             updated += 1;
             changedStoryIds.add(current.story_id);
           } else {
-            touchArticle.run(item.observedAt, current.id);
+            touchArticle.run(item.observedAt, item.sourceUpdatedAt, current.id);
             unchanged += 1;
           }
           storyIds.add(current.story_id);
@@ -428,6 +437,7 @@ export class NewsStore {
       SELECT a.id, a.source_id AS sourceId, f.name AS sourceName, f.region, f.language,
         a.external_id AS externalId, a.story_id AS storyId, a.title, a.summary, a.url,
         a.canonical_url AS canonicalUrl, a.published_at AS publishedAt,
+        a.source_updated_at AS sourceUpdatedAt,
         a.observed_at AS observedAt, a.last_seen_at AS lastSeenAt, a.content_hash AS contentHash
       FROM articles a JOIN feed_sources f ON f.id=a.source_id
       WHERE a.story_id=?

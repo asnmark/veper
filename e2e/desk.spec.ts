@@ -16,7 +16,7 @@ function article(id: string, sourceId: string, sourceName: string, title: string
   return {
     id, sourceId, sourceName, region: "si", language: "sl", externalId: id,
     storyId: "story-bridge", title, summary, url, canonicalUrl: url,
-    publishedAt: "2026-10-20T07:00:00.000Z", observedAt: "2026-10-20T07:15:00.000Z",
+    publishedAt: "2026-10-20T07:00:00.000Z", sourceUpdatedAt: null, observedAt: "2026-10-20T07:15:00.000Z",
     lastSeenAt: "2026-10-20T07:15:00.000Z", contentHash: `hash-${id}`, revisions: [],
   };
 }
@@ -27,7 +27,10 @@ const reportA = {
   lastSeenAt: "2026-10-20T07:16:00.000Z",
   revisions: [{ id: "a-old", observedAt: "2026-10-20T07:15:00.000Z", title: "Občina Vrhnika zapira stari most", summary: "Občina bo most zaprla do četrtka.", contentHash: "old-hash" }],
 };
-const reportB = article("b", "n1", "N1 Slovenija", "Občina Vrhnika do nedelje zapira stari most", quoteB, "https://n1.invalid/most");
+const reportB: StoredArticle = {
+  ...article("b", "n1", "N1 Slovenija", "Občina Vrhnika do nedelje zapira stari most", quoteB, "https://n1.invalid/most"),
+  sourceUpdatedAt: "2026-10-20T07:15:30.000Z",
+};
 const bridge: StoryRecord = {
   id: "story-bridge", title: "Občina Vrhnika do nedelje zapira stari most",
   category: "public-safety", createdAt: "2026-10-20T07:00:00.000Z", updatedAt: "2026-10-20T07:16:00.000Z",
@@ -49,7 +52,7 @@ const bridge: StoryRecord = {
 };
 const policyArticle: StoredArticle = {
   ...article("c", "rtvslo", "RTV Slovenija", "Državni zbor potrdil predlog proračuna", "Poslanci so glasovali o državnem proračunu.", "https://rtvslo.invalid/proracun"),
-  id: "c", storyId: "story-budget",
+  id: "c", storyId: "story-budget", observedAt: "2026-10-20T06:20:00.000Z", lastSeenAt: "2026-10-20T06:20:00.000Z",
 };
 const policy: StoryRecord = {
   id: "story-budget", title: policyArticle.title, category: "politics",
@@ -94,6 +97,7 @@ test("opens a source-grounded discrepancy dossier", async ({ page }) => {
   await expect(comparison.getByText(quoteB)).toBeVisible();
   await expect(comparison.getByRole("link", { name: "Odpri izvirnik: RTV Slovenija" })).toHaveAttribute("href", "https://rtvslo.invalid/most");
   await expect(dossier.getByText(/posodobitev zajeta ·/)).toBeVisible();
+  await expect(dossier.getByText(/vir posodobil ·/)).toBeVisible();
   await expect(dossier.getByText("PREJŠNJI IZSEK")).toBeVisible();
   const titleBox = await dossier.getByRole("heading", { name: bridge.title, level: 2 }).boundingBox();
   const saveBox = await dossier.getByRole("button", { name: "Shrani zgodbo" }).boundingBox();
@@ -118,14 +122,36 @@ test("searches, saves a story, and requests a feed refresh", async ({ page }) =>
   await expect(page.getByText(/virov uspešno osveženih/)).toBeVisible();
 });
 
+test("surfaces concrete newsroom signals and filters stories in development", async ({ page }) => {
+  await installApiRoutes(page);
+
+  await expect(page.getByText("NOVO POROČANJE").first()).toBeVisible();
+  await expect(page.getByText("VEČ VIROV").first()).toBeVisible();
+  await expect(page.getByText("POSODOBLJENA OBJAVA").first()).toBeVisible();
+  await expect(page.getByText("MOŽNO NESKLADJE").first()).toBeVisible();
+  await page.getByRole("button", { name: "Filter: v razvoju" }).click();
+  await expect(page.getByRole("button", { name: /Občina Vrhnika do nedelje/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Državni zbor potrdil/ })).toHaveCount(0);
+});
+
 test("keeps filters and the selected story reachable on a narrow screen", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await installApiRoutes(page);
 
+  const rail = page.locator(".source-rail");
+  await expect(rail).toHaveAttribute("aria-hidden", "true");
+  await expect.poll(() => rail.evaluate((element) => (element as HTMLElement).inert)).toBe(true);
   await page.getByRole("button", { name: "Odpri filtre" }).click();
+  await expect(rail).toHaveAttribute("aria-hidden", "false");
+  await expect.poll(() => rail.evaluate((element) => (element as HTMLElement).inert)).toBe(false);
   await expect(page.getByRole("button", { name: "Filter: možna neskladja" })).toBeVisible();
+  await page.locator(".rail-scrim").click();
+  const menu = page.getByRole("button", { name: "Odpri filtre" });
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+  await expect(menu).toBeFocused();
+  await menu.click();
   await page.getByRole("button", { name: "Filter: možna neskladja" }).click();
-  await expect(page.getByRole("button", { name: "Odpri filtre" })).toHaveAttribute("aria-expanded", "false");
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByRole("heading", { name: "Primerjava poročanja" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Primerjava virov" }).getByRole("link", { name: "Odpri izvirnik: N1 Slovenija" })).toBeVisible();
   await expect.poll(() => page.locator(".source-rail").evaluate((rail) => rail.getBoundingClientRect().right <= 0)).toBe(true);
@@ -149,4 +175,5 @@ test("states unavailable feeds and disabled intelligence without implying live c
   await expect(page.getByText("0/3 VIROV DOSEGLJIVIH")).toBeVisible();
   await expect(page.getByText("Gemini ni nastavljen; prikazani so samo podatki iz virov.")).toBeVisible();
   await expect(page.getByText("VIRNI PREGLED")).toBeVisible();
+  await expect(page.locator(".health-error").first()).toContainText("Vir ni dosegljiv.");
 });
